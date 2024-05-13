@@ -7,8 +7,8 @@ import { CreateLinkDto } from './dto/create-link.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Link } from './entities/link.entity';
 import { Repository } from 'typeorm';
-import { generateRandomBytes } from 'src/utils/random-bytes';
 import * as bcrypt from 'bcrypt';
+import { generateRandomBytes } from '../utils/random-bytes';
 
 @Injectable()
 export class LinksService {
