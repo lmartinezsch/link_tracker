@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   ValidationPipe,
   UsePipes,
@@ -13,11 +12,12 @@ import {
 } from '@nestjs/common';
 import { LinksService } from './links.service';
 import { CreateLinkDto } from './dto/create-link.dto';
-import { UpdateLinkDto } from './dto/update-link.dto';
 import { LinkRequestDto } from './dto/link.request.dto';
 import { RedirectResponseDto } from './dto/redirect.response.dto';
 import { Link } from './entities/link.entity';
 import { StatisticsResponseDto } from './dto/stats.response.dto';
+import { CreateLinkResponseDto } from './dto/create-link.response.dto';
+import { plainToClass } from 'class-transformer';
 
 @Controller('links')
 export class LinksController {
@@ -25,8 +25,19 @@ export class LinksController {
 
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
-  create(@Body() createLinkDto: CreateLinkDto) {
-    return this.linksService.create(createLinkDto);
+  async create(
+    @Body() createLinkDto: CreateLinkDto,
+  ): Promise<CreateLinkResponseDto> {
+    try {
+      const link = await this.linksService.create(createLinkDto);
+      return plainToClass(CreateLinkResponseDto, {
+        target: link.target,
+        link: link.link,
+        valid: link.isValid,
+      });
+    } catch (e) {
+      throw new HttpException(e.message, e.status);
+    }
   }
 
   @Get('/redirect')
@@ -56,7 +67,11 @@ export class LinksController {
   }
 
   @Put('/invalidate')
-  invalidateLink(@Query() request: LinkRequestDto) {
-    return this.linksService.invalidateLink(request.link);
+  async invalidateLink(@Query() request: LinkRequestDto) {
+    try {
+      return await this.linksService.invalidateLink(request.link);
+    } catch (e) {
+      throw new HttpException(e.message, e.status);
+    }
   }
 }

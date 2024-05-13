@@ -1,14 +1,8 @@
-import { IsBoolean, IsDate, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsOptional, IsString } from 'class-validator';
 
 export class CreateLinkDto {
   @IsString()
-  link!: string;
-
-  @IsString()
-  target!: string;
-
-  @IsBoolean()
-  isValid!: boolean;
+  url!: string;
 
   @IsDate()
   @IsOptional()

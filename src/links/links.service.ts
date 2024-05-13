@@ -1,9 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLinkDto } from './dto/create-link.dto';
-import { UpdateLinkDto } from './dto/update-link.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Link } from './entities/link.entity';
 import { Repository } from 'typeorm';
+import { generateRandomBytes } from 'src/utils/random-bytes';
 
 @Injectable()
 export class LinksService {
@@ -13,21 +17,23 @@ export class LinksService {
   ) {}
 
   async create(createLinkDto: CreateLinkDto) {
-    const newLink = this.linksRepository.create({
-      link: createLinkDto.link,
-      target: createLinkDto.target,
-      isValid: createLinkDto.isValid,
+    const link = await this.linksRepository.findOneBy({
+      target: createLinkDto.url,
     });
-    await this.linksRepository.save(newLink);
-  }
+    if (link)
+      throw new BadRequestException('The urls already has an masked url');
 
-  findAll() {
-    return this.linksRepository.find();
+    const linkId = generateRandomBytes(6);
+    const newLink = this.linksRepository.create({
+      link: process.env.MASKED_URL + linkId,
+      target: createLinkDto.url,
+    });
+    return await this.linksRepository.save(newLink);
   }
 
   async statistics(id: number): Promise<Link> {
     const linkEntity = await this.linksRepository.findOneBy({ id });
-    if (!linkEntity) throw new Error('Link not found');
+    if (!linkEntity) throw new NotFoundException('Link not found');
 
     return linkEntity;
   }
@@ -35,8 +41,8 @@ export class LinksService {
   async redirect(link: string): Promise<Link> {
     const linkEntity = await this.linksRepository.findOneBy({ link });
 
-    if (!linkEntity) throw new Error('Link not found');
-    if (!linkEntity.isValid) throw new Error('Link is invalid');
+    if (!linkEntity) throw new NotFoundException('Link not found');
+    if (!linkEntity.isValid) throw new BadRequestException('Link is invalid');
 
     // Register the new redirect
     linkEntity.redirectsCount++;
@@ -45,15 +51,11 @@ export class LinksService {
     return linkEntity;
   }
 
-  async invalidateLink(link: string) {
+  async invalidateLink(link: string): Promise<void> {
     const linkEntity = await this.linksRepository.findOneBy({ link });
+    if (!linkEntity) throw new NotFoundException('Link not found');
+
     linkEntity.isValid = false;
     await this.linksRepository.save(linkEntity);
-
-    return;
-  }
-
-  async remove(id: number) {
-    await this.linksRepository.delete(id);
   }
 }
