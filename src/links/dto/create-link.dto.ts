@@ -7,4 +7,8 @@ export class CreateLinkDto {
   @IsDate()
   @IsOptional()
   expirationDate?: Date;
+
+  @IsString()
+  @IsOptional()
+  password?: string;
 }

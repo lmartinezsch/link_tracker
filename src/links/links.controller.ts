@@ -41,11 +41,15 @@ export class LinksController {
   }
 
   @Get('/redirect')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async redirect(
     @Query() request: LinkRequestDto,
   ): Promise<RedirectResponseDto> {
     try {
-      const redirect: Link = await this.linksService.redirect(request?.link);
+      const redirect: Link = await this.linksService.redirect(
+        request.link,
+        request?.password,
+      );
       return {
         target: redirect.target,
       };
@@ -55,6 +59,7 @@ export class LinksController {
   }
 
   @Get('/:id/stats')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async statistics(@Param('id') id: string): Promise<StatisticsResponseDto> {
     try {
       const redirect: Link = await this.linksService.statistics(+id);
@@ -67,6 +72,7 @@ export class LinksController {
   }
 
   @Put('/invalidate')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async invalidateLink(@Query() request: LinkRequestDto) {
     try {
       return await this.linksService.invalidateLink(request.link);

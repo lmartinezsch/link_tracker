@@ -19,4 +19,7 @@ export class Link {
 
   @Column({ type: 'varchar', nullable: true })
   expirationDate?: Date;
+
+  @Column({ type: 'varchar', nullable: true })
+  password?: string;
 }
