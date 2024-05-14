@@ -8,6 +8,9 @@ import { CreateLinkDto } from '../../src/links/dto/create-link.dto';
 import { CreateLinkResponseDto } from '../../src/links/dto/create-link.response.dto';
 import { HttpException } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
+import { LinkRequestDto } from '../../src/links/dto/link.request.dto';
+import { RedirectResponseDto } from '../../src/links/dto/redirect.response.dto';
+import { StatisticsResponseDto } from '../../src/links/dto/stats.response.dto';
 
 describe('LinksController', () => {
   let controller: LinksController;
@@ -101,6 +104,111 @@ describe('LinksController', () => {
         password: 'password',
       };
       await expect(controller.create(createLinkDto)).rejects.toThrow();
+    });
+  });
+
+  describe('redirect', () => {
+    it('should redirect to the target link', async () => {
+      const linkRequestDto: LinkRequestDto = {
+        link: 'https://maskedurl.com/abcd',
+        password: 'password',
+      };
+      const redirectResponseDto: RedirectResponseDto = {
+        target: 'https://example.com',
+      };
+      jest.spyOn(service, 'redirect').mockResolvedValue({
+        ...linkRequestDto,
+        target: redirectResponseDto.target,
+      } as Link);
+
+      const result = await controller.redirect(linkRequestDto);
+      expect(result).toEqual(redirectResponseDto);
+    });
+
+    it('should throw HttpException if redirect fails', async () => {
+      const linkRequestDto: LinkRequestDto = {
+        link: 'https://maskedurl.com/abcd',
+        password: 'password',
+      };
+      jest
+        .spyOn(service, 'redirect')
+        .mockRejectedValue(new Error('Redirect failed'));
+
+      await expect(controller.redirect(linkRequestDto)).rejects.toThrow(
+        HttpException,
+      );
+    });
+
+    it('should use ValidationPipe to validate the input', async () => {
+      const linkRequestDto: LinkRequestDto = {
+        link: 'invalid-url',
+        password: 'password',
+      };
+      await expect(controller.redirect(linkRequestDto)).rejects.toThrow();
+    });
+  });
+
+  describe('statistics', () => {
+    it('should return the statistics for a link', async () => {
+      const linkId = '1';
+      const statisticsResponseDto: StatisticsResponseDto = {
+        count: 5,
+      };
+      jest.spyOn(service, 'statistics').mockResolvedValue({
+        id: +linkId,
+        redirectsCount: statisticsResponseDto.count,
+      } as Link);
+
+      const result = await controller.statistics(linkId);
+      expect(result).toEqual(statisticsResponseDto);
+    });
+
+    it('should throw HttpException if statistics retrieval fails', async () => {
+      const linkId = '1';
+      jest
+        .spyOn(service, 'statistics')
+        .mockRejectedValue(new Error('Statistics retrieval failed'));
+
+      await expect(controller.statistics(linkId)).rejects.toThrow(
+        HttpException,
+      );
+    });
+
+    it('should use ValidationPipe to validate the input', async () => {
+      const invalidId = 'abc';
+      await expect(controller.statistics(invalidId)).rejects.toThrow();
+    });
+  });
+
+  describe('invalidateLink', () => {
+    it('should invalidate the link', async () => {
+      const linkRequestDto: LinkRequestDto = {
+        link: 'https://maskedurl.com/abcd',
+      };
+      jest.spyOn(service, 'invalidateLink').mockResolvedValue(undefined);
+
+      const result = await controller.invalidateLink(linkRequestDto);
+      expect(result).toBeUndefined();
+    });
+
+    it('should throw HttpException if invalidation fails', async () => {
+      const linkRequestDto: LinkRequestDto = {
+        link: 'https://maskedurl.com/abcd',
+      };
+      jest
+        .spyOn(service, 'invalidateLink')
+        .mockRejectedValue(new Error('Invalidation failed'));
+
+      await expect(controller.invalidateLink(linkRequestDto)).rejects.toThrow(
+        HttpException,
+      );
+    });
+
+    it('should use ValidationPipe to validate the input', async () => {
+      const invalidLinkRequestDto: LinkRequestDto = { link: 'invalid-url' };
+      await expect(
+        controller.invalidateLink(invalidLinkRequestDto),
+      ).rejects.toThrow();
     });
   });
 });
