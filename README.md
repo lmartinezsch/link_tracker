@@ -1,73 +1,95 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Link Tracker
+Este proyecto es un sistema para rastrear y enmascarar URLs, permitiendo obtener análisis de cuántas veces se accedió a cada enlace, así como también agregar reglas de negocio para el funcionamiento del redireccionamiento.
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
+## Instalación
+Para instalar las dependencias del proyecto, ejecuta el siguiente comando:
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Running the app
+## Configuración
+El proyecto utiliza variables de entorno para la configuración. Crea un archivo .env en la raíz del proyecto y configura las variables necesarias. Puedes encontrar un ejemplo en el archivo .env.example.
 
+## Uso
+## Ejecutar en modo desarrollo
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run start:dev
 ```
 
-## Test
+Esto iniciará el servidor en modo de desarrollo y estará disponible en http://localhost:3000.
 
+## Ejecutar en modo producción
 ```bash
-# unit tests
-$ npm run test
+npm run start:prod
+```
+Esto iniciará el servidor en modo de producción.
 
-# e2e tests
-$ npm run test:e2e
+## Endpoints
+## Crear un enlace
+```bash
+POST /links
+```
+Crea un enlace a partir de una URL válida y devuelve la URL enmascarada a utilizar.
 
-# test coverage
-$ npm run test:cov
+### Parámetros de entrada
+- <b>url</b> (string): URL válida a enmascarar.
+- <b>password</b> (string, opcional): Contraseña opcional para acceder al enlace.
+
+### Ejemplo de solicitud
+```json
+{
+  "url": "https://www.ejemplo.com",
+  "password": "secreto"
+}
 ```
 
-## Support
+### Ejemplo de respuesta
+```json
+{
+  "target": "https://www.ejemplo.com",
+  "link": "https://maskedurl.com/abcd",
+  "valid": true
+}
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
-## Stay in touch
+## Redireccionar a un enlace
+```bash
+GET /links/redirect?link=<link>&password=<password>
+```
+Redirecciona a la URL enmascarada. Si el enlace es inválido, devuelve un error 404.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Parámetros de entrada
+- <b>link</b> (string): Enlace enmascarado.
+- <b>password</b> (string, opcional): Contraseña si se requiere.
 
-## License
 
-Nest is [MIT licensed](LICENSE).
+## Obtener estadísticas de un enlace
+```bash
+GET /links/:id/stats
+```
+
+Obtiene las estadísticas de cantidad de veces que se redirigió a un enlace.
+
+### Parámetros de entrada
+- <b>id</b> (string): ID del enlace.
+
+### Ejemplo de respuesta
+```json
+{
+  "count": 5
+}
+```
+
+### Invalidar un enlace
+```bash
+PUT /links/invalidate?link=<link>
+```
+Invalida un enlace, haciendo que devuelva un error 404 al intentar acceder.
+
+### Parámetros de entrada
+- <b>link</b> (string): Enlace a invalidar.
+
+
+Recuerda reemplazar <link> y <password> con los valores adecuados en las descripciones de los endpoints.
